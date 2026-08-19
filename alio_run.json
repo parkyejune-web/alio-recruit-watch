@@ -1,6 +1,6 @@
 {
-  "started": "2026-08-19 20:03:32",
-  "finished": "2026-08-19 20:03:38",
+  "started": "2026-08-19 11:04:27",
+  "finished": "2026-08-19 11:04:39",
   "pages": [
     {
       "page": 1,
@@ -15,10 +15,17 @@
       "new": 50,
       "dup": 0,
       "empty_title": 0
+    },
+    {
+      "page": 3,
+      "rows": 50,
+      "new": 50,
+      "dup": 0,
+      "empty_title": 0
     }
   ],
   "detail_ok": 0,
   "detail_fail": 0,
   "errors": [],
-  "total": 100
+  "total": 150
 }
