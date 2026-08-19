@@ -1,0 +1,59 @@
+name: alio-collect
+
+on:
+  schedule:
+    - cron: '0 22 * * *'      # UTC 22:00 = KST 07:00 (매일 아침)
+  workflow_dispatch:           # 손으로도 돌릴 수 있게
+
+permissions:
+  contents: write
+  issues: write                # 실패 시 이슈로 알림
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - run: pip install -r requirements.txt
+
+      - name: 수집
+        run: python collect_alio.py --pages 3
+
+      - name: 품질검증 (FAIL이면 여기서 잡이 죽는다)
+        run: python validate_alio.py
+
+      - name: 마스터에 누적
+        run: python append_master.py
+
+      - name: 결과 커밋
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data 품질검증리포트.md alio_공고.csv alio_run.json
+          git diff --staged --quiet || git commit -m "수집 $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
+
+      - name: 실패 알림 (이슈 생성)
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `수집 실패 — ${new Date().toISOString().slice(0,16).replace('T',' ')} UTC`,
+              body: [
+                '자동 수집이 실패했습니다.',
+                '',
+                `- 실행 로그 : ${url}`,
+                '- 흔한 원인 : 대상 사이트 구조 변경 / 일시적 접속 실패 / 품질검증 FAIL',
+                '',
+                '품질검증에서 걸린 경우 데이터는 저장되지 않았습니다 (틀린 데이터가 누적되지 않도록).',
+              ].join('\n'),
+            });
