@@ -83,7 +83,7 @@ def listing_table(html: str):
     soup = BeautifulSoup(ANCHOR_FIX.sub(r"\1>", html), "lxml")
     for t in soup.find_all("table"):
         cap = t.find("caption")
-        if cap and cap.get_text(strip=True) == "채용정보_구조변경됨":   # in 이 아니라 ==
+        if cap and cap.get_text(strip=True) == "채용정보":   # in 이 아니라 ==
             return t
     return None
 
